@@ -22,22 +22,23 @@ def parse_filename(name):
     filename = os.path.basename(name)
     parts = filename.split("_")
 
-    date_str = datetime.strptime(parts[2] + parts[3], "%Y%m%d%H%M")
     return {
         "path": os.path.dirname(name),
         "filename": filename,
-        "platform": parts[1],
-        "date": date_str,
+        "platform": "NOAA 18" if parts[1] == "noaa18" else "NOAA 19",
+        "date": datetime.strptime(parts[2] + parts[3], "%Y%m%d%H%M"),
+        "orbit": parts[4].split(".")[0],
     }
 
 
 def format_filename(parts):
-    if parts["platform"] == "aqua":
-        platform = "a1"
-    elif parts["platform"] == "terra":
-        platform = "t1"
-
-    filename = ".".join(
-        [platform, parts["date"].strftime("%y%j.%H%M"), parts["resolution"], "hdf",]
+    filename = "_".join(
+        [
+            "hrpt",
+            "noaa18" if parts["platform"] == "NOAA 18" else "noaa19",
+            parts["date"].strftime("%Y%M%D_%H%M"),
+            parts["orbit"],
+        ]
     )
-    return os.path.join(parts["path"], filename)
+
+    return os.path.join(parts["path"], filename + ".l1b")

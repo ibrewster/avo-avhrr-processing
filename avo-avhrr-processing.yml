@@ -218,7 +218,7 @@ Resources:
         Variables:
           AVHRR_IMAGE_URL: !Ref AvhrrImageQueue
           PYTHONPATH: /mnt/rsdata/venv/20220421/lib/python3.7/site-packages
-          TLES: /mnt/rsdata/tle/resource.txt
+          TLES: /mnt/rsdata/tle/weather.txt
           SATPY_CONFIG_PATH: /mnt/rsdata/trollconfig
           GSHHS_DATA_ROOT: /mnt/rsdata/gshhg
           PSP_CONFIG_FILE: /mnt/rsdata/trollconfig/pyspectral.yaml

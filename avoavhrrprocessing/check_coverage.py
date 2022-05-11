@@ -17,7 +17,7 @@ from satpy.scene import Scene
 # from satpy.utils import debug_on
 from trollsched.satpass import Pass
 
-from . import format_filename, parse_filename
+from . import parse_filename
 
 PPP_CONFIG_DIR = "/mnt/rsdata/trollconfig"
 AREA_DEF = f"{PPP_CONFIG_DIR}/areas.def"
@@ -35,43 +35,44 @@ def lambda_handler(event, context):
     msg = json.loads(event["Records"][0]["Sns"]["Message"])
     local_path = msg["local_path"]
     parts = parse_filename(local_path)
-    print(f"parts: {parts}")
-
-    if not os.path.isfile(local_path):
-        return {"statusCode": 500, "body": "File isn't there."}
-
-    # debug_on()
-    filenames = []
-    if parts["resolution"] == "1000m" or parts["resolution"] == "500m":
-        geo = parts.copy()
-        geo["resolution"] = "geo"
-        fn = format_filename(geo)
-        if os.path.exists(fn):
-            filenames.extend([local_path, format_filename(geo)])
-        else:
-            print(f"Have {parts['resolution']} still waiting on geo file.")
-    elif parts["resolution"] == "geo":
-        df = parts.copy()
-        df["resolution"] = "500m"
-        fn = format_filename(df)
-        if os.path.exists(fn):
-            filenames.extend([local_path, fn])
-        else:
-            print("Have geo file, still waiting on 500m.")
-
-        df["resolution"] = "1000m"
-        fn = format_filename(df)
-        if os.path.exists(fn):
-            filenames.extend([local_path, fn])
-        else:
-            print("Have geo file, still waiting on 1000m.")
-
-        filenames = list(set(filenames))
-
-    print(f"filenames: {filenames}")
-    if not filenames:
-        return {"statusCode": 200, "body": "Still waiting on data"}
-
+    # print(f"parts: {parts}")
+    #
+    # if not os.path.isfile(local_path):
+    #     return {"statusCode": 500, "body": "File isn't there."}
+    #
+    # # debug_on()
+    # filenames = []
+    # if parts["resolution"] == "1000m" or parts["resolution"] == "500m":
+    #     geo = parts.copy()
+    #     geo["resolution"] = "geo"
+    #     fn = format_filename(geo)
+    #     if os.path.exists(fn):
+    #         filenames.extend([local_path, format_filename(geo)])
+    #     else:
+    #         print(f"Have {parts['resolution']} still waiting on geo file.")
+    # elif parts["resolution"] == "geo":
+    #     df = parts.copy()
+    #     df["resolution"] = "500m"
+    #     fn = format_filename(df)
+    #     if os.path.exists(fn):
+    #         filenames.extend([local_path, fn])
+    #     else:
+    #         print("Have geo file, still waiting on 500m.")
+    #
+    #     df["resolution"] = "1000m"
+    #     fn = format_filename(df)
+    #     if os.path.exists(fn):
+    #         filenames.extend([local_path, fn])
+    #     else:
+    #         print("Have geo file, still waiting on 1000m.")
+    #
+    #     filenames = list(set(filenames))
+    #
+    # print(f"filenames: {filenames}")
+    # if not filenames:
+    #     return {"statusCode": 200, "body": "Still waiting on data"}
+    #
+    filenames = [msg["local_path"]]
     scn = Scene(reader="avhrr_l1b_aapp", filenames=filenames)
     overpass = Pass(parts["platform"], scn.start_time, scn.end_time, instrument="avhrr")
 
