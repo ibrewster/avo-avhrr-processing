@@ -13,8 +13,7 @@
 
 import json
 import os
-
-# import re
+import re
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
@@ -24,7 +23,7 @@ import requests
 GINA_URL = "http://nrt-status.gina.alaska.edu/products.json"
 BACKFILL_DAYS = 2
 CHUNK_SIZE_BYTES = 20 * 1024 * 1024
-FILE_PATTERN = "hrpt.*l1b"
+URL_PATTERN = ".*/hrpt_noaa.*l1b"
 AVHRR_L1_DIR = "/mnt/rsdata/avhrr/l1"
 AVHRR_L1_TOPIC = os.environ["AVHRR_L1_TOPIC"]
 
@@ -47,8 +46,7 @@ def list_gina_avhrr():
     r = requests.get(GINA_URL, params=payload)
     print(f"URL: {r.url}")
 
-    # files = [f for f in json.loads(r.text) if re.search(f["url"], FILE_PATTERN)]
-    files = [f for f in json.loads(r.text)]
+    files = [f for f in json.loads(r.text) if re.search(f["url"], URL_PATTERN)]
     print(f"FILES1: {files}")
     for file in files:
         file["local_path"] = os.path.join(
