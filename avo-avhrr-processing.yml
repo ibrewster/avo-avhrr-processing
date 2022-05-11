@@ -140,7 +140,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Schedule Download Avhrr
-      ScheduleExpression: rate(15 minutes)
+      ScheduleExpression: rate(1 day)
       State: ENABLED
       Targets:
         - Arn: !GetAtt DownloadAvhrr.Arn
