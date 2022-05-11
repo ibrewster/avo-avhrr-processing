@@ -13,6 +13,7 @@
 
 import json
 import os
+import re
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
@@ -45,7 +46,7 @@ def list_gina_avhrr():
     r = requests.get(GINA_URL, params=payload)
     print(f"URL: {r.url}")
 
-    files = [f for f in json.loads(r.text) if f["url"].matches(FILE_PATTERN)]
+    files = [f for f in json.loads(r.text) if re.search(f["url"], FILE_PATTERN)]
 
     for file in files:
         file["local_path"] = os.path.join(
