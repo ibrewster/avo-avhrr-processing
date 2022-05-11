@@ -39,7 +39,7 @@ def list_gina_avhrr():
         "end_date": end_date.strftime("%Y-%m-%d"),
         "sensors[]": "avhrr",
         "processing_levels[]": "level1",
-        "facilities[]": "uafgina",
+        # "facilities[]": "uafgina",
     }
 
     r = requests.get(GINA_URL, params=payload)
