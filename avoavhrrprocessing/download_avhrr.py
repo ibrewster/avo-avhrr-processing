@@ -45,13 +45,14 @@ def list_gina_avhrr():
     r = requests.get(GINA_URL, params=payload)
     print(f"URL: {r.url}")
 
-    files = json.loads(r.text)
+    files = [f for f in json.loads(r.text) if f["url"].matches(FILE_PATTERN)]
+
     for file in files:
         file["local_path"] = os.path.join(
             AVHRR_L1_DIR, urlparse(file["url"]).path.lstrip("/")
         )
 
-    return files
+    return [f for f in files if not os.path.exists(f["local_path"])]
 
 
 def download_file(url, path):
@@ -69,7 +70,7 @@ def download_file(url, path):
 
 
 def lambda_handler(event, context):
-    new_files = [f for f in list_gina_avhrr() if not os.path.exists(f["local_path"])]
+    new_files = list_gina_avhrr()
     print(f"found new {len(new_files)} files")
     for file in new_files:
         try:
