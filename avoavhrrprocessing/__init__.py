@@ -22,7 +22,7 @@ def parse_filename(name):
     filename = os.path.basename(name)
     parts = filename.split("_")
 
-    date_str = datetime.strptime(parts[2] + parts[3], "%y%m%d%H%M")
+    date_str = datetime.strptime(parts[2] + parts[3], "%Y%m%d%H%M")
     return {
         "path": os.path.dirname(name),
         "filename": filename,
