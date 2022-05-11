@@ -1,0 +1,207 @@
+---
+image: code.chs.usgs.gov:5001/chs-library/docker/awslint:stable
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  CFN_TEMPLATE: avo-avhrr-processing.yml
+  CFN_STACK_NAME: avo-avhrr-processing
+  LAMBDA_DIR: avoavhrrprocessing
+  LAMBDA_PACKAGE: ${LAMBDA_DIR}-${CI_COMMIT_SHORT_SHA}.zip
+
+  REGION: us-west-2
+  AWS_DEFAULT_REGION: $REGION
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .cache/pip
+    - /venv
+
+before_script:
+  - aws configure set default.region $REGION
+  - pip3 install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+
+stages:
+  - build
+  - stage
+  - test
+  - deploy
+
+.production:
+  variables:
+    AWS_BUCKET: avostaging-production
+    TEMPLATE_URL: https://$AWS_BUCKET.s3.amazonaws.com/$CFN_STACK_NAME/$CFN_TEMPLATE
+    CFN_ROLE: $CFN_ROLE_PROD
+    CI_BUILD_TAG: latest
+    VPC_ID: vpc-08b3ff738ca74f57c
+    ECS_SUBNETS: "subnet-00dcaa5dc7309fb90:subnet-0e78a825ea51c3718:subnet-0363bbf65d04094eb"
+    VV_ENDPOINTS: http://dev-volcview.wr.usgs.gov/vv-api
+    VV_USER: volcview_update
+    VV_PASSWORD: $VV_PASSWORD_PROD
+  only:
+    - production
+  tags:
+    - production
+
+.development:
+  variables:
+    AWS_BUCKET: avostaging-development
+    TEMPLATE_URL: https://$AWS_BUCKET.s3.amazonaws.com/$CFN_STACK_NAME/$CFN_TEMPLATE
+    CFN_ROLE: $CFN_ROLE_DEV
+    CI_BUILD_TAG: development
+    VPC_ID: vpc-0055752230db6161d
+    ECS_SUBNETS: "subnet-06cf6942c47c4958d:subnet-08f1118dd59133513:subnet-0dd447dd1e3e8f355"
+    VV_ENDPOINTS_DISABLED: >-
+                    http://avo-volcview-new.wr.usgs.gov/vv-api/;
+                    http://volcview-new.wr.usgs.gov/vv-api/;
+    VV_ENDPOINTS: >-
+                    https://volcview.wr.usgs.gov/vv-api;
+                    https://avo-volcview.wr.usgs.gov/vv-api;
+                    http://dev-volcview.wr.usgs.gov/vv-api;
+    VV_USER: internalavo
+    VV_PASSWORD: $VV_PASSWORD_DEV
+  only:
+    - development
+  tags:
+    - development
+
+###########
+## BUILD ##
+###########
+.build:lambda:
+  stage: build
+  image: amazonlinux:2
+  before_script:
+    - yum update -y
+    - yum install -y awscli zip
+    - aws configure set default.region $REGION
+  script:
+    - mkdir package
+    - ls $LAMBDA_DIR
+    - cp -r $LAMBDA_DIR package
+    - cd package
+    - zip -r $LAMBDA_PACKAGE .
+    - aws s3 mv $LAMBDA_PACKAGE s3://$AWS_BUCKET/$CFN_STACK_NAME/
+
+.build:lambdacentos:
+  stage: build
+  image: centos:7
+  before_script:
+    - yum update -y
+    - yum install -y awscli
+    - aws configure set default.region $REGION
+  script:
+    - mkdir package
+    - yum install -y epel-release
+    - yum install -y hdf
+    - yum install -y hdf-devel
+    - yum install -y python36-numpy
+    - yum install -y python36-devel
+    - yum install -y gcc
+    - yum search gfortran
+    - yum search quadmath
+    - export LIBRARY_PATH=/usr/lib64/hdf
+    - pip3 install --target package -r requirements.txt
+    - mkdir package/lib
+    - ldd package/pyhdf/*.so
+    - cp -r /usr/lib/*df* package/lib
+#   - cp -r /usr/lib/*df* /usr/lib/x86_64-linux-gnu/libgfortran* /usr/lib/x86_64-linux-gnu/libquadmath* package/lib
+    - cp -r $LAMBDA_DIR package
+    - cd package
+    - zip -r $LAMBDA_PACKAGE .
+    - aws s3 mv $LAMBDA_PACKAGE s3://$AWS_BUCKET/$CFN_STACK_NAME/
+
+build:lambda_dev:
+  extends:
+    - .development
+    - .build:lambda
+
+build:lambda_prod:
+  extends:
+    - .production
+    - .build:lambda
+
+###########
+## STAGE ##
+###########
+.stage:stage_templates:
+  stage: stage
+  script:
+    - aws s3 cp $CFN_TEMPLATE s3://$AWS_BUCKET/$CFN_STACK_NAME/
+
+stage:stage_templates_dev:
+  extends:
+    - .development
+    - .stage:stage_templates
+
+stage:stage_templates_prod:
+  extends:
+    - .production
+    - .stage:stage_templates
+
+##########
+## TEST ##
+##########
+test:flake8:
+  stage: test
+  script:
+    - pip3 install flake8
+    - flake8 $LAMBDA_DIR
+  when: always
+
+test:yaml:
+  stage: test
+  script:
+    - yamllint -d relaxed $CFN_TEMPLATE
+  when: always
+
+test:cfn-lint:
+  stage: test
+  script:
+    - cfn-lint -u
+    - cfn-lint $CFN_TEMPLATE
+  when: always
+
+.test:validate-template:
+  stage: test
+  script:
+    - aws cloudformation validate-template --template-url https://$AWS_BUCKET.s3.amazonaws.com/$CFN_STACK_NAME/$CFN_TEMPLATE
+
+test:validate-template_dev:
+  extends:
+    - .development
+    - .test:validate-template
+
+test:validate-template_prod:
+  extends:
+    - .production
+    - .test:validate-template
+
+############
+## DEPLOY ##
+############
+.deploy:
+  stage: deploy
+  script:
+    - >-
+      aws cloudformation create-change-set --change-set-type CREATE --capabilities CAPABILITY_IAM
+      --change-set-name changeset-${CI_COMMIT_SHORT_SHA} --stack-name $CFN_STACK_NAME
+      --template-url https://$AWS_BUCKET.s3.amazonaws.com/$CFN_STACK_NAME/$CFN_TEMPLATE --role-arn $CFN_ROLE
+      --parameters
+      ParameterKey="codeKey",ParameterValue="${CFN_STACK_NAME}/${LAMBDA_PACKAGE}"
+      ParameterKey="codeBucket",ParameterValue="$AWS_BUCKET"
+      ParameterKey="volcviewPassword",ParameterValue="$VV_PASSWORD"
+      ParameterKey="volcviewEndpoints",ParameterValue="$VV_ENDPOINTS"
+  when: on_success
+
+deploy_dev:
+  extends:
+    - .development
+    - .deploy
+
+deploy_prod:
+  extends:
+    - .production
+    - .deploy

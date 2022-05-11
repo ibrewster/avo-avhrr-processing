@@ -1,0 +1,386 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AVO Remote Sensing AVHRR Stack
+
+Parameters:
+  codeBucket:
+    Description: lambda package bucket
+    Type: String
+  codeKey:
+    Description: lambda package
+    Type: String
+  volcviewEndpoints:
+    Description: volcview endpoints
+    Type: String
+  volcviewUser:
+    Description: volcview user
+    Type: String
+    Default: internalavo
+  volcviewPassword:
+    Description: volcview password
+    Type: String
+
+  # Do something about these magic numbers
+  vpcId:
+    Description: My VPC
+    Type: AWS::EC2::VPC::Id
+    Default: vpc-08b3ff738ca74f57c
+  subnets:
+    Description: subnets for ECS instances
+    Type: List<AWS::EC2::Subnet::Id>
+    Default: >-
+      subnet-00dcaa5dc7309fb90,
+      subnet-0363bbf65d04094eb,
+      subnet-0e78a825ea51c3718
+
+
+Resources:
+  avhrrSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: AVHRR processing
+      VpcId: !Ref vpcId
+      SecurityGroupIngress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+
+  AvhrrL1Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: AVHRR Level 1b Files
+      TopicName: AvhrrL1Topic
+  AvhrrL1TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowS3Pub
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Ref AWS::AccountId
+            Action: SNS:Publish
+            Resource: "*"
+          - Sid: AllowSubscribe
+            Effect: Allow
+            Principal:
+              AWS: !Join ["", ["arn:aws:iam::", !Ref AWS::AccountId, ":root"]]
+            Action:
+              - SNS:Subscribe
+            Resource: "*"
+      Topics:
+        - !Ref AvhrrL1Topic
+
+  AvhrrPngTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: AVHRR PNG Files
+      TopicName: AvhrrPngTopic
+  ModisPngTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowPub
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Ref AWS::AccountId
+            Action: SNS:Publish
+            Resource: "*"
+          - Sid: AllowSubscribe
+            Effect: Allow
+            Principal:
+              AWS: !Join ["", ["arn:aws:iam::", !Ref AWS::AccountId, ":root"]]
+            Action:
+              - SNS:Subscribe
+            Resource: "*"
+      Topics:
+        - !Ref AvhrrPngTopic
+
+  DownloadAvhrr:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: avoavhrrprocessing.download_avhrr.lambda_handler
+      ReservedConcurrentExecutions: 1
+      FileSystemConfigs:
+        - Arn: !ImportValue rsdataAP-ARN
+          LocalMountPath: /mnt/rsdata
+      Role:
+        !Join
+        - ""
+        - - "arn:aws:iam::"
+          - !Ref "AWS::AccountId"
+          - ":role/csr-Lambda-Role"
+      Code:
+        S3Bucket: !Ref codeBucket
+        S3Key: !Ref codeKey
+      Runtime: python3.7
+      Timeout: 300
+      MemorySize: 128
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref avhrrSG
+        SubnetIds: !Ref subnets
+      Environment:
+        Variables:
+          MODIS_L1_TOPIC: !Ref AvhrrL1Topic
+          PYTHONUNBUFFERED: "1"
+
+  ScheduleDownloadAvhrr:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Schedule Download Modis
+      ScheduleExpression: rate(15 minutes)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt DownloadAvhrr.Arn
+          Id: DownloadAvhrr
+  PermissionForEventsToInvokeDownloadAvhrr:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DownloadAvhrr
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleDownloadAvhrr.Arn
+
+  AvhrrImageDeadLetter:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+  AvhrrImageQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      MessageRetentionPeriod: 86400
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        maxReceiveCount: 1
+        deadLetterTargetArn: !GetAtt AvhrrImageDeadLetter.Arn
+  AvhrrImageQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref AvhrrImageQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AvhrrImageQueuePolicy
+            Effect: Allow
+            Principal: "*"
+            Action:
+              - 'sqs:*'
+            Resource: !GetAtt AvhrrImageQueue.Arn
+
+  CheckCoverage:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: avoavhrrprocessing.check_coverage.lambda_handler
+      Description: Kicks off processing when a new file is available.
+      Role:
+        !Join
+        - ""
+        - - "arn:aws:iam::"
+          - !Ref "AWS::AccountId"
+          - ":role/csr-Lambda-Role"
+      Code:
+        S3Bucket: !Ref codeBucket
+        S3Key: !Ref codeKey
+      Runtime: python3.7
+      Timeout: 180
+      MemorySize: 512
+      Layers:
+        - !Join
+          - ""
+          - - "arn:aws:lambda:"
+            - !Ref AWS::Region
+            - ":"
+            - !Ref "AWS::AccountId"
+            - ":layer:avo-pytroll:1"
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref avhrrSG
+        SubnetIds: !Ref subnets
+      FileSystemConfigs:
+        - Arn: !ImportValue rsdataAP-ARN
+          LocalMountPath: /mnt/rsdata
+      Environment:
+        Variables:
+          AVHRR_IMAGE_URL: !Ref AvhrrImageQueue
+          PYTHONPATH: /mnt/rsdata/venv/20220421/lib/python3.7/site-packages
+          TLES: /mnt/rsdata/tle/resource.txt
+          SATPY_CONFIG_PATH: /mnt/rsdata/trollconfig
+          GSHHS_DATA_ROOT: /mnt/rsdata/gshhg
+          PSP_CONFIG_FILE: /mnt/rsdata/trollconfig/pyspectral.yaml
+          PYTHONUNBUFFERED: "1"
+  PermissionForSnsToInvokeProcessAvhrr:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CheckCoverage
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref AvhrrL1Topic
+  ModisFilesSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AvhrrL1Topic
+      Endpoint: !GetAtt CheckCoverage.Arn
+      Protocol: lambda
+
+
+
+  ProduceImage:
+    Type: AWS::Lambda::Function
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - E2530  # false positive, mem size okay
+    Properties:
+      Handler: avoavhrrprocessing.produce-image.handler
+      Description: Creates all products for a single area under a single pass
+      Role:
+        !Join
+        - ""
+        - - "arn:aws:iam::"
+          - !Ref "AWS::AccountId"
+          - ":role/csr-Lambda-Role"
+      Code:
+        S3Bucket: !Ref codeBucket
+        S3Key: !Ref codeKey
+      FileSystemConfigs:
+        - Arn: !ImportValue rsdataAP-ARN
+          LocalMountPath: /mnt/rsdata
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref avhrrSG
+        SubnetIds: !Ref subnets
+      Runtime: python3.7
+      Timeout: 180
+      MemorySize: 8192
+#      MemorySize: 10240
+      Environment:
+        Variables:
+          PYTHONPATH: /mnt/rsdata/venv/20220421/lib/python3.7/site-packages
+          TLES: /mnt/rsdata/tle/weather.txt
+          SATPY_CONFIG_PATH: /mnt/rsdata/trollconfig
+          GSHHS_DATA_ROOT: /mnt/rsdata/gshhg
+          PSP_CONFIG_FILE: /mnt/rsdata/trollconfig/pyspectral.yaml
+          MODIS_ROOT: /mnt/rsdata/avhrr
+          MPLCONFIGDIR: /mnt/rsdata/matplotlib
+          MODIS_PNG_TOPIC: !Ref AvhrrPngTopic
+          PYTHONUNBUFFERED: "1"
+  TaskEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      EventSourceArn: !GetAtt AvhrrImageQueue.Arn
+      FunctionName: !GetAtt ProduceImage.Arn
+      Enabled: true
+
+  postVVSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access to volcview
+      VpcId: !Ref vpcId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+  PostVolcview:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: avoavhrrprocessing.post-volcview.handler
+      Description: Post new images to volcview
+      Role:
+        !Join
+        - ""
+        - - "arn:aws:iam::"
+          - !Ref "AWS::AccountId"
+          - ":role/csr-Lambda-Role"
+      Code:
+        S3Bucket: !Ref codeBucket
+        S3Key: !Ref codeKey
+      Runtime: python3.7
+      FileSystemConfigs:
+        - Arn: !ImportValue rsdataAP-ARN
+          LocalMountPath: /mnt/rsdata
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref postVVSG
+        SubnetIds: !Ref subnets
+      MemorySize: 128
+      Timeout: 120
+      Environment:
+        Variables:
+          VV_ENDPOINTS: !Ref volcviewEndpoints
+          VV_USER: !Ref volcviewUser
+          VV_PASSWORD: !Ref volcviewPassword
+          PNG_TOPIC: !Ref ModisPngTopic
+  PermissionForSnsToInvokepostVolcview:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PostVolcview
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref AvhrrPngTopic
+  AvhrrPngSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AvhrrPngTopic
+      Endpoint: !GetAtt PostVolcview.Arn
+      Protocol: lambda
+
+  CleanupEFS:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: avoavhrrprocessing.cleanupefs.handler
+      ReservedConcurrentExecutions: 1
+      FileSystemConfigs:
+        - Arn: !ImportValue rsdataAP-ARN
+          LocalMountPath: /mnt/rsdata
+      Role:
+        !Join
+        - ""
+        - - "arn:aws:iam::"
+          - !Ref "AWS::AccountId"
+          - ":role/csr-Lambda-Role"
+      Code:
+        S3Bucket: !Ref codeBucket
+        S3Key: !Ref codeKey
+      Runtime: python3.7
+      Timeout: 30
+      MemorySize: 128
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref avhrrSG
+        SubnetIds: !Ref subnets
+  ScheduleCleanupEFS:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Schedule cleanupEFS
+      ScheduleExpression: rate(1 day)
+      State: ENABLED
+      Targets:
+        -
+          Arn: !GetAtt CleanupEFS.Arn
+          Id: CleanupEFS
+  PermissionForEventsToInvokeCleanupEFS:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CleanupEFS
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleCleanupEFS.Arn
+
