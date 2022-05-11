@@ -82,7 +82,7 @@ Resources:
     Properties:
       DisplayName: AVHRR PNG Files
       TopicName: AvhrrPngTopic
-  ModisPngTopicPolicy:
+  AvhrrPngTopicPolicy:
     Type: AWS::SNS::TopicPolicy
     Properties:
       PolicyDocument:
@@ -139,7 +139,7 @@ Resources:
   ScheduleDownloadAvhrr:
     Type: AWS::Events::Rule
     Properties:
-      Description: Schedule Download Modis
+      Description: Schedule Download Avhrr
       ScheduleExpression: rate(15 minutes)
       State: ENABLED
       Targets:
@@ -230,7 +230,7 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: sns.amazonaws.com
       SourceArn: !Ref AvhrrL1Topic
-  ModisFilesSubscription:
+  AvhrrFilesSubscription:
     Type: AWS::SNS::Subscription
     Properties:
       TopicArn: !Ref AvhrrL1Topic
@@ -327,7 +327,7 @@ Resources:
           VV_ENDPOINTS: !Ref volcviewEndpoints
           VV_USER: !Ref volcviewUser
           VV_PASSWORD: !Ref volcviewPassword
-          PNG_TOPIC: !Ref ModisPngTopic
+          PNG_TOPIC: !Ref AvhrrPngTopic
   PermissionForSnsToInvokepostVolcview:
     Type: AWS::Lambda::Permission
     Properties:
