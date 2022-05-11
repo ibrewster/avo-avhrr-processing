@@ -46,7 +46,7 @@ def list_gina_avhrr():
     r = requests.get(GINA_URL, params=payload)
     print(f"URL: {r.url}")
 
-    files = [f for f in json.loads(r.text) if re.search(f["url"], URL_PATTERN)]
+    files = [f for f in json.loads(r.text) if re.search(URL_PATTERN, f["url"])]
     print(f"FILES1: {files}")
     for file in files:
         file["local_path"] = os.path.join(
