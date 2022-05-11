@@ -47,22 +47,19 @@ FONT_SIZE = 14
 COAST_DIR = "/mnt/rsdata/gshhg"
 AREA_DEF = "/mnt/rsdata/trollconfig/areas.def"
 POST_TIMEOUT = 30
-MODIS_ROOT = os.environ["MODIS_ROOT"]
-MODIS_PNG_TOPIC = os.environ["MODIS_PNG_TOPIC"]
+AVHRR_ROOT = os.environ["AVHRR_ROOT"]
+AVHRR_PNG_TOPIC = os.environ["AVHRR_PNG_TOPIC"]
 PNG_FILE_PREFIX = os.path.join(
-    MODIS_ROOT, "png/{date}/{sector}/{sector}-{platform}-{product}-{datet}.png"
+    AVHRR_ROOT, "png/{date}/{sector}/{sector}-{platform}-{product}-{datet}.png"
 )
 
 
 def processor_factory(files):
-    scene = Scene(filenames=files, reader="modis_l1b")
+    scene = Scene(filenames=files, reader="avhrr_l1b_aapp")
     platform = parse_filename(files[0])["platform"]
     for p in Processor.__subclasses__():
-        if p.check(files):
-            print(f"File matched {p.product}")
-            yield p(scene, platform)
-        else:
-            print(f"File didn't match {p.product}")
+        print(f"File matched {p.product}")
+        yield p(scene, platform)
 
 
 class Processor(ABC):
@@ -120,17 +117,6 @@ class Processor(ABC):
         """
         pass
 
-    @staticmethod
-    def check(files):
-        """Can I plot this data?
-
-        Parameters
-        ----------
-        files : List[String]
-            data files
-        """
-        pass
-
     def decorate_pilimg(self, pilimg):
         """Apply decorations to an image
 
@@ -177,7 +163,7 @@ class Processor(ABC):
             Image to label
         """
         start_string = self.scene.start_time.strftime("%m/%d/%Y %H:%M UTC")
-        label = "{} {} MODIS {}".format(start_string, self.platform, self.product_label)
+        label = "{} {} AVHRR {}".format(start_string, self.platform, self.product_label)
         dcimg.add_text(
             label,
             font=TYPEFACE,
@@ -231,9 +217,9 @@ class Processor(ABC):
             "start_time": self.scene.start_time.isoformat(),
         }
         print(f"Posting: {msg}")
-        if MODIS_PNG_TOPIC:
+        if AVHRR_PNG_TOPIC:
             boto3.client("sns").publish(
-                TargetArn=MODIS_PNG_TOPIC, Message=json.dumps(msg)
+                TargetArn=AVHRR_PNG_TOPIC, Message=json.dumps(msg)
             )
 
 
@@ -245,17 +231,10 @@ class TIR(Processor):
             scene,
             platform,
             TIR.product,
-            "31",
+            "4",
             "Thermal IR",
             "thermal infrared brightness tempeerature (c)",
         )
-
-    @staticmethod
-    def check(files):
-        for file in files:
-            if parse_filename(file)["resolution"] == "1000m":
-                return True
-        return False
 
     def enhance_image(self, img):
         img.crude_stretch(208.15, 308.15)  # -65c - 35c
@@ -275,7 +254,7 @@ class MIR(Processor):
             scene,
             platform,
             MIR.product,
-            "20",
+            "3",
             "Mid-IR",
             "mid-infrared brightness temperature (c)",
         )
@@ -283,13 +262,6 @@ class MIR(Processor):
             (0.0, (0.0, 0.0, 0.0)), (1.0, (1.0, 1.0, 1.0))
         )  # NOQA: E501
         self.colors.set_range(-50, 50)
-
-    @staticmethod
-    def check(files):
-        for file in files:
-            if parse_filename(file)["resolution"] == "1000m":
-                return True
-        return False
 
     def enhance_image(self, img):
         img.crude_stretch(223.15, 323.15)  # -50c - 50c
@@ -331,40 +303,26 @@ class BTD(Processor):
     def apply_colorbar(self, dcimg):
         super().draw_colorbar(dcimg, self.colors, 1, 0.5)
 
-    @staticmethod
-    def check(files):
-        for file in files:
-            if parse_filename(file)["resolution"] == "1000m":
-                return True
-        return False
-
     def load_data(self):
-        self.scene.load(["31", "32"])
+        self.scene.load(["4", "5"])
         try:
             self.scene = self.scene.resample(resampler="native")
         except ValueError as e:
             print("TOMP SAYS: not sure why this happens. Do something about it.")
             raise e
 
-        self.scene[self.dataset] = self.scene["31"] - self.scene["32"]
+        self.scene[self.dataset] = self.scene["4"] - self.scene["5"]
         self.scene[self.dataset].attrs = combine_metadata(
-            self.scene["31"], self.scene["32"]
+            self.scene["4"], self.scene["5"]
         )
 
 
 class VIS(Processor):
     product = "VIS"
 
-    @staticmethod
-    def check(files):
-        for file in files:
-            if parse_filename(file)["resolution"] == "500m":
-                return True
-        return False
-
     def __init__(self, scene, platform):
         super().__init__(
-            scene, platform, VIS.product, "true_color", "Visible", "true color"
+            scene, platform, VIS.product, "natural_color", "Visible", "true color"
         )  # NOQA: E501
 
     def enhance_image(self, img):
