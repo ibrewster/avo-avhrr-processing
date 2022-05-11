@@ -133,7 +133,7 @@ Resources:
         SubnetIds: !Ref subnets
       Environment:
         Variables:
-          MODIS_L1_TOPIC: !Ref AvhrrL1Topic
+          AVHRR_L1_TOPIC: !Ref AvhrrL1Topic
           PYTHONUNBUFFERED: "1"
 
   ScheduleDownloadAvhrr:
@@ -276,9 +276,9 @@ Resources:
           SATPY_CONFIG_PATH: /mnt/rsdata/trollconfig
           GSHHS_DATA_ROOT: /mnt/rsdata/gshhg
           PSP_CONFIG_FILE: /mnt/rsdata/trollconfig/pyspectral.yaml
-          MODIS_ROOT: /mnt/rsdata/avhrr
+          AVHRR_ROOT: /mnt/rsdata/avhrr
           MPLCONFIGDIR: /mnt/rsdata/matplotlib
-          MODIS_PNG_TOPIC: !Ref AvhrrPngTopic
+          AVHRR_PNG_TOPIC: !Ref AvhrrPngTopic
           PYTHONUNBUFFERED: "1"
   TaskEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
