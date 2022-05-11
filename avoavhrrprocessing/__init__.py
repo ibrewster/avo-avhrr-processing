@@ -18,23 +18,16 @@ from datetime import datetime
 
 
 def parse_filename(name):
-    # /blah/a1.20192.2308.250m.hdf
+    # /blah/hrpt_noaa19_20220511_1616_68326.l1b
     filename = os.path.basename(name)
-    parts = filename.split(".")
-    if parts[0] == "a1":
-        platform = "aqua"
-    elif parts[0] == "t1":
-        platform = "terra"
-    else:
-        platform = None
+    parts = filename.split("_")
 
-    date_str = datetime.strptime(parts[1] + parts[2], "%y%j%H%M")
+    date_str = datetime.strptime(parts[2] + parts[3], "%y%m%d%H%M")
     return {
         "path": os.path.dirname(name),
         "filename": filename,
-        "platform": platform,
+        "platform": parts[1],
         "date": date_str,
-        "resolution": parts[3],
     }
 
 
