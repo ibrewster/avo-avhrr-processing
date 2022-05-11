@@ -186,7 +186,7 @@ test:validate-template_prod:
   stage: deploy
   script:
     - >-
-      aws cloudformation create-change-set --change-set-type CREATE --capabilities CAPABILITY_IAM
+      aws cloudformation create-change-set --change-set-type UPDATE --capabilities CAPABILITY_IAM
       --change-set-name changeset-${CI_COMMIT_SHORT_SHA} --stack-name $CFN_STACK_NAME
       --template-url https://$AWS_BUCKET.s3.amazonaws.com/$CFN_STACK_NAME/$CFN_TEMPLATE --role-arn $CFN_ROLE
       --parameters
