@@ -22,7 +22,8 @@ from pydecorate import DecoratorAGG
 
 # from pyresample import load_area
 from satpy.dataset import combine_metadata
-from satpy.enhancements import cira_stretch
+
+# from satpy.enhancements import piecewise_linear_stretch
 from satpy.scene import Scene
 
 # from satpy.utils import debug_on, debug_off
@@ -322,9 +323,20 @@ class VIS(Processor):
 
     def __init__(self, scene, platform):
         super().__init__(
-            scene, platform, VIS.product, "1", "Visible", "Visible"
+            scene,
+            platform,
+            VIS.product,
+            "1",
+            "Visible",
+            "visible reflectance (percent)",
         )  # NOQA: E501
+        self.colors = colormap.Colormap(
+            (0.0, (0.0, 0.0, 0.0)), (1.0, (1.0, 1.0, 1.0))
+        )  # NOQA: E501
+        self.colors.set_range(0, 100)
 
-    def enhance_image(self, img):
-        cira_stretch(img)
-        self.scene = self.scene.resample(resampler="native")
+    # def enhance_image(self, img):
+    #     img.piecewise_linear_stretch(0, 100)
+
+    def apply_colorbar(self, dcimg):
+        super().draw_colorbar(dcimg, self.colors, 20, 10)
