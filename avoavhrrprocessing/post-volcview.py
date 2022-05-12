@@ -34,7 +34,7 @@ def get_image(bucket, key):
 
 def post_image(endpoint, image_attr):
     headers = {"username": VV_USER, "password": VV_PASSWORD}
-    print(f"TOMP SAYS :{VV_PASSWORD} :: {VV_USER}")
+    # print(f"TOMP SAYS :{VV_PASSWORD} :: {VV_USER}")
     parts = endpoint.split("|")
     if len(parts) > 1:
         headers["Host"] = parts[0]
