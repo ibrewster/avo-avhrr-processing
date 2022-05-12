@@ -59,8 +59,9 @@ def handler(event, context):
     print(f"Checking for products which match {filenames}")
     for p in processor_factory(filenames):
         print(f"Found {p}")
-        if os.path.exists(p.filename(sector_def)):
-            print(f"Skipping {p.product}, image exists.")
+        filename = p.filename(sector_def)
+        if os.path.exists(filename):
+            print(f"Skipping {p.product}, found {filename}")
             continue
         p.load_data()
         p.write_image(sector_def)
