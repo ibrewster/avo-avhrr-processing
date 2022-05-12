@@ -322,7 +322,7 @@ class VIS(Processor):
 
     def __init__(self, scene, platform):
         super().__init__(
-            scene, platform, VIS.product, "1", "Visible", "true color"
+            scene, platform, VIS.product, "1", "Visible", "Visible"
         )  # NOQA: E501
 
     def enhance_image(self, img):
