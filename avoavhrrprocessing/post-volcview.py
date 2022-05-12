@@ -47,7 +47,7 @@ def post_image(endpoint, image_attr):
     volcview_args = {
         "sector": image_attr["area_id"],
         "band": image_attr["volcview_band"],
-        "dataType": "modis",
+        "dataType": "avhrr",
         "imageUnixtime": datetime.fromisoformat(image_attr["start_time"]).timestamp(),
     }
     print(f"data: {volcview_args}")
