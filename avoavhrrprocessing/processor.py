@@ -254,7 +254,7 @@ class MIR(Processor):
             scene,
             platform,
             MIR.product,
-            "3",
+            "3b",
             "Mid-IR",
             "mid-infrared brightness temperature (c)",
         )
@@ -322,7 +322,7 @@ class VIS(Processor):
 
     def __init__(self, scene, platform):
         super().__init__(
-            scene, platform, VIS.product, "natural_color", "Visible", "true color"
+            scene, platform, VIS.product, "1", "Visible", "true color"
         )  # NOQA: E501
 
     def enhance_image(self, img):
