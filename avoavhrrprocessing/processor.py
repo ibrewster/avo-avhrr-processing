@@ -335,8 +335,5 @@ class VIS(Processor):
         )  # NOQA: E501
         self.colors.set_range(0, 100)
 
-    # def enhance_image(self, img):
-    #     img.piecewise_linear_stretch(0, 100)
-
     def apply_colorbar(self, dcimg):
         super().draw_colorbar(dcimg, self.colors, 20, 10)
