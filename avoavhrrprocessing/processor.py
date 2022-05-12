@@ -180,7 +180,7 @@ class Processor(ABC):
             date=self.scene.start_time.strftime("%Y%j"),
             sector=sector_def.area_id,
             product=self.product,
-            platform=self.platform,
+            platform="noaa18" if self.platform == "NOAA 18" else "noaa19",
             datet=self.scene.start_time.strftime("%Y%m%dT%H%M%SZ"),
         )
 
