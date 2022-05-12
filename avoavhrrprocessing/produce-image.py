@@ -63,8 +63,11 @@ def handler(event, context):
         if os.path.exists(filename):
             print(f"Skipping {p.product}, found {filename}")
             continue
-        p.load_data()
-        p.write_image(sector_def)
+        try:
+            p.load_data()
+            p.write_image(sector_def)
+        except KeyError as e:
+            print(f"Something went wrong, will try the next product. ({e})")
 
     return {"statusCode": 200, "body": "Yay!"}
 
