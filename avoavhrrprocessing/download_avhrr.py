@@ -71,7 +71,10 @@ def download_file(url, path):
 
 def lambda_handler(event, context):
     new_files = list_gina_avhrr()
-    print(f"found new {len(new_files)} files")
+    if new_files:
+        print(f"Found {len(new_files)} new files. Yay!")
+    else:
+        print("No new files. Boo.")
     for file in new_files:
         try:
             download_file(file["url"], file["local_path"])
