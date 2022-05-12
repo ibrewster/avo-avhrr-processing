@@ -187,9 +187,7 @@ class Processor(ABC):
 
     def write_image(self, sector_def):
         try:
-            local = self.scene.resample(
-                destination=sector_def, radius_of_influence=10000
-            )
+            local = self.scene.resample(destination=sector_def)
         except ValueError as e:
             print("TOMP SAYS: not sure why this happens. Do something about it.")
             raise e
@@ -335,8 +333,8 @@ class VIS(Processor):
         )  # NOQA: E501
         self.colors.set_range(0, 100)
 
-    def apply_colorbar(self, dcimg):
-        super().draw_colorbar(dcimg, self.colors, 20, 10)
+    # def apply_colorbar(self, dcimg):
+    #     super().draw_colorbar(dcimg, self.colors, 20, 10)
 
     # def enhance_image(self, img):
     #     img.crude_stretch(223.15, 323.15)  # -50c - 50c
