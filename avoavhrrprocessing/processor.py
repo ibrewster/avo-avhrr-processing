@@ -336,5 +336,5 @@ class VIS(Processor):
     # def apply_colorbar(self, dcimg):
     #     super().draw_colorbar(dcimg, self.colors, 20, 10)
 
-    # def enhance_image(self, img):
-    #     img.crude_stretch(223.15, 323.15)  # -50c - 50c
+    def enhance_image(self, img):
+        img.crude_stretch()
