@@ -187,7 +187,9 @@ class Processor(ABC):
 
     def write_image(self, sector_def):
         try:
-            local = self.scene.resample(destination=sector_def)
+            local = self.scene.resample(
+                destination=sector_def, radius_of_influence=5000
+            )
         except ValueError as e:
             print("TOMP SAYS: not sure why this happens. Do something about it.")
             raise e
