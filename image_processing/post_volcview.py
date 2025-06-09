@@ -18,22 +18,12 @@ import json
 import os
 from datetime import datetime
 
-import boto3
 import requests
 
-VV_ENDPOINTS = os.environ["VV_ENDPOINTS"].split(";")
-VV_USER = os.environ["VV_USER"]
-VV_PASSWORD = os.environ["VV_PASSWORD"]
-
-
-def get_image(bucket, key):
-    client = boto3.client("s3")
-    response = client.get_object(Bucket=bucket, Key=key)
-    return response["Body"].read()
-
+from . import config
 
 def post_image(endpoint, image_attr):
-    headers = {"username": VV_USER, "password": VV_PASSWORD}
+    headers = {"username": config.VV_USER, "password": config.VV_PASSWORD}
     # print(f"TOMP SAYS :{VV_PASSWORD} :: {VV_USER}")
     parts = endpoint.split("|")
     if len(parts) > 1:
@@ -73,22 +63,3 @@ def post_image(endpoint, image_attr):
         print(e)
 
     return response
-
-
-def handler(event, context):
-    print(f"Received event: {event}")
-    msg = json.loads(event["Records"][0]["Sns"]["Message"])
-    print(f"Received msg: {msg}")
-    status_code = 200
-    body = ""
-    for endpoint in VV_ENDPOINTS:
-        # if not endpoint:
-        #     continue
-        print(f"Pushing to {endpoint}")
-        response = post_image(endpoint, msg)
-        if not response.ok:
-            print(f"Bad response from volcview at {endpoint}: {response.reason}")
-            status_code = response.status_code
-            body += f"{endpoint}: {response.reason}\n"
-
-    return {"statusCode": status_code, "body": body}

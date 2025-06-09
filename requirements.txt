@@ -1,1 +1,6 @@
 requests
+pyresample
+satpy
+pytroll-schedule
+aggdraw
+pydecorate

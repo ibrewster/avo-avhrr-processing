@@ -1,0 +1,278 @@
+REGION: 1kmAKAP {
+        NAME:           Alaska Peninsula
+        PCS_ID:         1kmAKAP
+	PCS_DEF:	proj=laea, lat_0=56, lon_0=-160, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-500000, -400000, 500000, 400000)
+};
+
+REGION: 1kmAKEA {
+        NAME:           Eastern Aleutians
+        PCS_ID:         1kmAKEA
+	PCS_DEF:	proj=laea, lat_0=53, lon_0=-168, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-500000, -400000, 500000, 400000)
+};
+
+REGION: 1kmAKSC {
+        NAME:           South Central Alaska
+        PCS_ID:         1kmAKSC
+	PCS_DEF:	proj=laea, lat_0=60, lon_0=-150, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-500000, -400000, 500000, 400000)
+};
+
+REGION: 1kmAKWA {
+        NAME:           Western Aleutians Aleutians
+        PCS_ID:         1kmAKWA
+	PCS_DEF:	proj=laea, lat_0=52, lon_0=-180, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-500000, -400000, 500000, 400000)
+};
+
+REGION: 1kmRUKA {
+        NAME:           Kamchatka Peninsula
+        PCS_ID:         1kmRUKA
+	PCS_DEF:	proj=laea, lat_0=54, lon_0=160, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-500000, -400000, 500000, 400000)
+};
+
+REGION: 2kmAKAL {
+	NAME:		Aleutian Islands
+	PCS_ID:		2kmAKAL
+	PCS_DEF:	proj=laea, lat_0=52, lon_0=-172.5, a=6371228.0, units=m
+	XSIZE:		1000
+	YSIZE:		800
+	AREA_EXTENT:    (-1000000, -800000, 1000000, 800000)
+};
+
+REGION: 2kmAKGA {
+	NAME:		Gulf of Alaska
+	PCS_ID:		2kmAKGA
+	PCS_DEF:	proj=laea, lat_0=58, lon_0=-150, a=6371228.0, units=m
+	XSIZE:		1000
+	YSIZE:		800
+	AREA_EXTENT:    (-1000000, -800000, 1000000, 800000)
+};
+
+REGION: 2kmAKIN {
+	NAME:		Interior Alaska
+	PCS_ID:		2kmAKIN
+	PCS_DEF:	proj=laea, lat_0=65, lon_0=-155, a=6371228.0, units=m
+	XSIZE:		1000
+	YSIZE:		800
+	AREA_EXTENT:    (-1000000, -800000, 1000000, 800000)
+};
+
+REGION: 2kmAKSE {
+	NAME:		Southeast Alaska
+	PCS_ID:		2kmAKSE
+	PCS_DEF:	proj=laea, lat_0=52.5, lon_0=-130, a=6371228.0, units=m
+	XSIZE:		1000
+	YSIZE:		800
+	AREA_EXTENT:    (-1000000, -800000, 1000000, 800000)
+};
+
+REGION: 5kmAKNP {
+	NAME:		Eastern North Pacific
+	PCS_ID:		5kmAKNP
+	PCS_DEF:	proj=laea, lat_0=55, lon_0=-150, a=6371228.0, units=m
+	XSIZE:		1000
+	YSIZE:		800
+	AREA_EXTENT:    (-2500000, -2000000, 2500000, 2000000)
+};
+
+REGION: 2kmBERS {
+        NAME:           Bering Sea
+        PCS_ID:         2kmBERS
+    PCS_DEF:    proj=laea, lat_0=60, lon_0=-180, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-1000000, -800000, 1000000, 800000)
+};
+
+REGION: 2kmAKNS {
+        NAME:           Arctic Ocean
+        PCS_ID:         2kmAKNS
+    PCS_DEF:    proj=laea, lat_0=72.5, lon_0=-160, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-1000000, -800000, 1000000, 800000)
+};
+
+REGION: 1kmCNMI {
+        NAME:           Marianas Islands
+        PCS_ID:         1kmCNMI
+    PCS_DEF:    proj=laea, lat_0=17.30, lon_0=145.86, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-500000, -400000, 500000, 400000)
+};
+
+REGION: 1kmAKSE {
+    NAME:           South-East
+    PCS_ID:         1kmAKSE
+    PCS_DEF:        proj=laea, lat_0=57.05090, lon_0=-135.7610, a=6371228.0, units=m
+    XSIZE:          1000
+    YSIZE:          800
+    AREA_EXTENT:    (-500000, -400000, 500000, 400000)
+};
+
+REGION: 2kmRUKA {
+        NAME:           Kamchatka Peninsula 2km
+        PCS_ID:         2kmRUKA
+    PCS_DEF:    proj=laea, lat_0=55, lon_0=160, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-1000000, -800000, 1000000, 800000)
+};
+
+REGION: 2kmRUKI {
+        NAME:           Kuril Islands
+        PCS_ID:         2kmRUKI
+    PCS_DEF:    proj=laea, lat_0=47, lon_0=154, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-1000000, -800000, 1000000, 800000)
+};
+
+REGION: 5kmRUNP {
+        NAME:           Western North Pacific
+        PCS_ID:         5kmRUNP
+    PCS_DEF:    proj=laea, lat_0=55, lon_0=170, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-2500000, -2000000, 2500000, 2000000)
+};
+
+REGION: 375mAKCH {
+        NAME:           375mAKCH
+        PCS_ID:         375mAKCH
+    PCS_DEF:    proj=laea, lat_0=57.077, lon_0=-157.243, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKCL {
+        NAME:           375mAKCL
+        PCS_ID:         375mAKCL
+    PCS_DEF:    proj=laea, lat_0=52.899, lon_0=-169.975, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKCN {
+        NAME:           375mAKCN
+        PCS_ID:         375mAKCN
+    PCS_DEF:    proj=laea, lat_0=60.890, lon_0=-152.617, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKCS {
+        NAME:           375mAKCS
+        PCS_ID:         375mAKCS
+    PCS_DEF:    proj=laea, lat_0=59.647, lon_0=-153.534, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKKA {
+        NAME:           375mAKKA
+        PCS_ID:         375mAKKA
+    PCS_DEF:    proj=laea, lat_0=58.464, lon_0=-155.383, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKKN {
+        NAME:           375mAKKN
+        PCS_ID:         375mAKKN
+    PCS_DEF:    proj=laea, lat_0=51.946, lon_0=-177.155, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKKO {
+        NAME:           375mAKKO
+        PCS_ID:         375mAKKO
+    PCS_DEF:    proj=laea, lat_0=52.316, lon_0=-174.145, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKMA {
+        NAME:           375mAKMA
+        PCS_ID:         375mAKMA
+    PCS_DEF:    proj=laea, lat_0=53.769, lon_0=-167.180, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKPV {
+        NAME:           375mAKPV
+        PCS_ID:         375mAKPV
+    PCS_DEF:    proj=laea, lat_0=55.257, lon_0=-162.154, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKSH {
+        NAME:           375mAKSH
+        PCS_ID:         375mAKSH
+    PCS_DEF:    proj=laea, lat_0=54.698, lon_0=-164.005, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKVN {
+        NAME:           375mAKVN
+        PCS_ID:         375mAKVN
+    PCS_DEF:    proj=laea, lat_0=56.210, lon_0=-159.365, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKWA {
+        NAME:           375mAKWA
+        PCS_ID:         375mAKWA
+    PCS_DEF:    proj=laea, lat_0=51.974, lon_0=179.085, a=6371228.0, units=m
+        XSIZE:          1000
+        YSIZE:          800
+        AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKWR {
+    NAME:           375mAKWR
+    PCS_ID:         375mAKWR
+    PCS_DEF:        proj=laea, lat_0=62.004, lon_0=-144.132, a=6371228.0, units=m
+    XSIZE:          1000
+    YSIZE:          800
+    AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};
+
+REGION: 375mAKEG {
+    NAME:           375mAKEG
+    PCS_ID:         375mAKEG
+    PCS_DEF:        proj=laea, lat_0=57.05, lon_0=-135.75, a=6371228.0, units=m
+    XSIZE:          1000
+    YSIZE:          800
+    AREA_EXTENT:    (-187000, -149600, 187000, 149600)
+};

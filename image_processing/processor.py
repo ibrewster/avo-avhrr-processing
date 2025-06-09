@@ -5,17 +5,10 @@ This module provides utility functions and an abstract base class for
 creating images for volcview.
 
 """
-
-# import calendar
-# import io
-import json
-
-# import os
 import os.path
 from abc import ABC
 
 import aggdraw
-import boto3
 
 # from geotiepoints.multilinear_cython import multilinear_interpolation
 from pydecorate import DecoratorAGG
@@ -31,7 +24,8 @@ from satpy.writers import add_overlay
 from trollimage import colormap
 from trollimage.xrimage import XRImage
 
-from . import parse_filename
+from .utils import parse_filename
+from . import config
 
 # from satpy import find_files_and_readers
 
@@ -43,15 +37,13 @@ from . import parse_filename
 # from trollsched.satpass import Pass
 
 GOLDENROD = (218, 165, 32)
-TYPEFACE = "/mnt/rsdata/Cousine-Bold.ttf"
+TYPEFACE = "Cousine-Bold.ttf"
 FONT_SIZE = 14
-COAST_DIR = "/mnt/rsdata/gshhg"
-AREA_DEF = "/mnt/rsdata/trollconfig/areas.def"
+COAST_DIR = "gshhg"
+AREA_DEF = "areas.def"
 POST_TIMEOUT = 30
-AVHRR_ROOT = os.environ["AVHRR_ROOT"]
-AVHRR_PNG_TOPIC = os.environ["AVHRR_PNG_TOPIC"]
 PNG_FILE_PREFIX = os.path.join(
-    AVHRR_ROOT, "png/{date}/{sector}/{sector}-{platform}-{product}-{datet}.png"
+    config.AVHRR_ROOT, "png/{date}/{sector}/{sector}-{platform}-{product}-{datet}.png"
 )
 
 
@@ -217,11 +209,7 @@ class Processor(ABC):
             "volcview_band": self.volcview_band,
             "start_time": self.scene.start_time.isoformat(),
         }
-        print(f"Posting: {msg}")
-        if AVHRR_PNG_TOPIC:
-            boto3.client("sns").publish(
-                TargetArn=AVHRR_PNG_TOPIC, Message=json.dumps(msg)
-            )
+        return msg
 
 
 class TIR(Processor):
