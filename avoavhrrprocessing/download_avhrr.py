@@ -30,6 +30,8 @@ AVHRR_L1_TOPIC = os.environ["AVHRR_L1_TOPIC"]
 
 def list_gina_avhrr():
     print("Fetching list of available files from GINA")
+    # TODO:
+    # end_date = datetime.now(timezone.utc) + timedelta(days=1)
     end_date = datetime.utcnow() + timedelta(days=1)
     start_date = datetime.utcnow() - timedelta(days=BACKFILL_DAYS)
     payload = {
