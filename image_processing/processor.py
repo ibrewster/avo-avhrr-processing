@@ -10,49 +10,27 @@ from abc import ABC
 
 import aggdraw
 
-# from geotiepoints.multilinear_cython import multilinear_interpolation
 from pydecorate import DecoratorAGG
 
-# from pyresample import load_area
 from satpy.dataset import combine_metadata
 
-# from satpy.enhancements import piecewise_linear_stretch
-from satpy.scene import Scene
-
-# from satpy.utils import debug_on, debug_off
 from satpy.writers import add_overlay
 from trollimage import colormap
 from trollimage.xrimage import XRImage
 
-from .utils import parse_filename
+from .utils import code_lookup
 from . import config
 
-# from satpy import find_files_and_readers
-
-
-# import pyspectral
-# import requests
-
-
-# from trollsched.satpass import Pass
 
 GOLDENROD = (218, 165, 32)
-TYPEFACE = "Cousine-Bold.ttf"
+TYPEFACE = f"{config.PPP_CONFIG_DIR}/Cousine-Bold.ttf"
 FONT_SIZE = 14
-COAST_DIR = "gshhg"
-AREA_DEF = "areas.def"
+COAST_DIR = f"{config.PPP_CONFIG_DIR}/gshhg"
+AREA_DEF = f"{config.PPP_CONFIG_DIR}/areas.def"
 POST_TIMEOUT = 30
 PNG_FILE_PREFIX = os.path.join(
     config.AVHRR_ROOT, "png/{date}/{sector}/{sector}-{platform}-{product}-{datet}.png"
 )
-
-
-def processor_factory(files):
-    scene = Scene(filenames=files, reader="avhrr_l1b_aapp")
-    platform = parse_filename(files[0])["platform"]
-    for p in Processor.__subclasses__():
-        print(f"File matched {p.product}")
-        yield p(scene, platform)
 
 
 class Processor(ABC):
@@ -173,7 +151,7 @@ class Processor(ABC):
             date=self.scene.start_time.strftime("%Y%j"),
             sector=sector_def.area_id,
             product=self.product,
-            platform="noaa18" if self.platform == "NOAA 18" else "noaa19",
+            platform=code_lookup.get(self.platform, 'unknown'),
             datet=self.scene.start_time.strftime("%Y%m%dT%H%M%SZ"),
         )
 
@@ -185,6 +163,15 @@ class Processor(ABC):
         except ValueError as e:
             print("TOMP SAYS: not sure why this happens. Do something about it.")
             raise e
+
+        if self.product == 'MIR' and  '3b' in self.scene.available_dataset_names():
+            import numpy
+            data_array_3b = local['3b']
+            data_array_values = data_array_3b.values
+            is_all_nan = numpy.isnan(data_array_values).all()
+            if is_all_nan:
+                print("No MIR data found in sector. Skipping.")
+                raise KeyError("No MIR data in region")
 
         img = XRImage(local[self.dataset].squeeze())
         self.enhance_image(img)

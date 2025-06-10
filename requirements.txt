@@ -4,3 +4,5 @@ satpy
 pytroll-schedule
 aggdraw
 pydecorate
+python-geotiepoints
+pycoast
