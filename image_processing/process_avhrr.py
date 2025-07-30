@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from pyresample import parse_area_file, geometry
@@ -44,14 +45,18 @@ def main(file):
                 processor.load_data()
                 msg = processor.write_image(sector_def)
                 for endpoint in config.VOLCVIEW_SERVERS:
-                    pass
-                    # response = post_image(endpoint, msg)
+                    print(f"Uploading image to {endpoint}")
+                    response = post_image(endpoint, msg)
 
-                    # if not response.ok:
-                    #    print(f"Bad response from volcview at {endpoint}: {response.reason}")
-                # Path(filename).unlink()
+                    if not response.ok:
+                        print(f"Bad response from volcview at {endpoint}: {response.reason}")
+                Path(filename).unlink()
             except KeyError as e:
                 print(f"Something went wrong, will try the next product. ({e})")
+            except Exception as e:
+                logging.exception(f"An unknown exception occured while processing {processor.product}. Will try the next product.")
 
     # TODO: determine if we want to archive the data file or something.
-    Path(file).unlink()
+    print(f"Deleting source file {file}")
+    Path(file).unlink(missing_ok=True)
+    print("All sectors processed")

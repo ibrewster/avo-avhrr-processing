@@ -29,29 +29,30 @@ if __name__ == "__main__":
     logging.info("Incron triggered for files: %s", str(files))
     
     for file in files:
-        initial_file_size = os.path.getsize(file_path)
-        logging.info("Checking file settlement for '%s'. Initial size: %d bytes.", file_path, initial_file_size)
+        initial_file_size = os.path.getsize(file)
+        logging.info("Checking file settlement for '%s'. Initial size: %d bytes.", file, initial_file_size)
         time.sleep(15) # Wait for file to settle
-        current_file_size = os.path.getsize(file_path)
+        current_file_size = os.path.getsize(file)
         
         if current_file_size != initial_file_size:
             logging.info("File '%s' transfer still in process (size changed from %d to %d). Not launching processing.", 
-                         file_path, initial_file_size, current_file_size)
+                         file, initial_file_size, current_file_size)
             exit(1) # Exit if file is not settled
             
-        logging.info("File '%s' appears settled. Launching detached process.", file_path)
+        logging.info("File '%s' appears settled. Launching detached process.", file)
         
         cmd = [
             'nohup',
             sys.executable,
+            '-u', 
             PROCESSING_SCRIPT,
-            file_path, # Pass the single file path
+            file, # Pass the single file path
             '>>', config.LOG_FILE, # Redirect stdout to /dev/null
             '2>&1',           # Redirect stderr to /dev/null as well
             '&'               # Run in background
         ]
         
         subprocess.Popen(" ".join(cmd), shell=True, preexec_fn=os.setsid)
-        logging.info("Successfully launched detached proicess for %s", file_path)
+        logging.info("Successfully launched detached proicess for %s", file)
         
     logging.info("Incron script finished (launched eligible processing job).")
