@@ -91,7 +91,7 @@ class Processor(ABC):
         self.color_bar_font = aggdraw.Font(GOLDENROD, TYPEFACE, size=FONT_SIZE)
         self.scene = scene
 
-        print(f"KEYS: {self.scene}")
+        # print(f"KEYS: {self.scene}")
 
     def load_data(self):
         """Load data into a scene
