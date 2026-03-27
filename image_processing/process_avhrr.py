@@ -16,7 +16,13 @@ COVERAGE_THREASHOLD = 0.1
 def main(file):
     name_parts = parse_filename(file)
 
-    scn = Scene(reader="avhrr_l1b_aapp", filenames=[file])
+    try:
+        scn = Scene(reader="avhrr_l1b_aapp", filenames=[file])
+    except ValueError:
+        print(f"Unable to load file {file}. Aborting.")
+        Path(file).unlink(missing_ok=True)
+        return
+    
     platform = name_parts["platform"]
     scn.load(['longitude', 'latitude'])
     lons = scn['longitude'].values
