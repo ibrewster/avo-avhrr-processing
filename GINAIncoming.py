@@ -41,18 +41,21 @@ if __name__ == "__main__":
             
         logging.info("File '%s' appears settled. Launching detached process.", file)
         
-        cmd = [
-            'nohup',
-            sys.executable,
-            '-u', 
-            PROCESSING_SCRIPT,
-            file, # Pass the single file path
-            '>>', config.LOG_FILE, # Redirect stdout to /dev/null
-            '2>&1',           # Redirect stderr to /dev/null as well
-            '&'               # Run in background
-        ]
+        # cmd = [
+            # 'nohup',
+            # sys.executable,
+            # '-u', 
+            # PROCESSING_SCRIPT,
+            # file, # Pass the single file path
+            # '>>', config.LOG_FILE, # Redirect stdout to /dev/null
+            # '2>&1',           # Redirect stderr to /dev/null as well
+            # '&'               # Run in background
+        # ]
         
-        subprocess.Popen(" ".join(cmd), shell=True, preexec_fn=os.setsid)
+        # subprocess.Popen(" ".join(cmd), shell=True, preexec_fn=os.setsid)
+        quoted_command = f"{sys.executable} -u {PROCESSING_SCRIPT} {file} >> {config.LOG_FILE} 2>&1"
+        subprocess.Popen(f"tsp sh -c '{quoted_command}'", shell=True)
+        
         logging.info("Successfully launched detached proicess for %s", file)
         
     logging.info("Incron script finished (launched eligible processing job).")
